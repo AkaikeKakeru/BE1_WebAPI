@@ -28,9 +28,39 @@ pplx::task<void> GetAllFaculties() {
 	});
 }
 
+
+pplx::task<void> PostTest() {
+	return pplx::create_task([] {
+		// クライアントの設定
+		http_client client(L"http://localhost:3000/faculties");
+
+		// 送信データの作成
+		json::value postData;
+		postData[L"name"] = json::value::string(L"test");
+
+		// リクエスト送信
+		return client.request(methods::POST, L"", postData.serialize(),
+			L"application/json");
+	})
+	.then([](http_response response) {
+		// ステータスコート判定
+		if (response.status_code() == status_codes::OK) {
+			// レスポンスボディを表示
+			auto body = response.extract_string();
+			std::wcout << body.get().c_str() << std::endl;
+		}
+	});
+}
+
 int main() {
 	try {
 		GetAllFaculties().wait();
+	} catch (const std::exception &e) {
+		printf("Error exception:%s\n", e.what());
+	}
+
+	try {
+		PostTest().wait();
 	} catch (const std::exception &e) {
 		printf("Error exception:%s\n", e.what());
 	}
